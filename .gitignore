@@ -1,0 +1,17 @@
+# Frontend
+Frontend/node_modules
+Frontend/dist
+Frontend/.env
+Frontend/.env.local
+Frontend/package-lock.json
+# Backend
+Backened/venv
+Backened/__pycache__
+Backened/*.pyc
+Backened/.env
+
+# General
+.DS_Store
+.vscode
+.idea
+*.log
