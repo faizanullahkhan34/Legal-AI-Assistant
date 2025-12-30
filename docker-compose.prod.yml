@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # Frontend Service - Production Configuration
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: legal-ai-frontend-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - legal-ai-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # Backend Service - Production Configuration
+  backend:
+    build:
+      context: ./Backened
+      dockerfile: Dockerfile
+    container_name: legal-ai-backend-prod
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.production
+    depends_on:
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ./Backened/document:/app/document
+      - backend_cache:/app/.cache
+      - backend_logs:/app/logs
+    networks:
+      - legal-ai-network
+    restart: always
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # Redis Service - Production Configuration
+  redis:
+    image: redis:alpine
+    container_name: legal-ai-redis-prod
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - legal-ai-network
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Ollama Service - Production Configuration
+  ollama:
+    image: ollama/ollama:latest
+    container_name: legal-ai-ollama-prod
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - legal-ai-network
+    restart: always
+    # Uncomment for NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    #     limits:
+    #       cpus: '4'
+    #       memory: 8G
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/tags" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+networks:
+  legal-ai-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local
+  ollama_data:
+    driver: local
+  backend_cache:
+    driver: local
+  backend_logs:
+    driver: local
