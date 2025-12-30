@@ -3,8 +3,11 @@ import redis
 import json
 import numpy as np
 
+import os
+
 try:
-    r = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_host = os.getenv("REDIS_HOST", "localhost")
+    r = redis.Redis(host=redis_host, port=6379, db=0, decode_responses=True)
     r.ping() # Check connection
 except:
     r = None

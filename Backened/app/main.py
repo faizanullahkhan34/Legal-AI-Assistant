@@ -12,6 +12,16 @@ app = FastAPI(title="Indian Legal Advisor Bot")
 async def startup_event():
     logger.info("Application starting up...")
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Docker and monitoring"""
+    return {
+        "status": "healthy",
+        "service": "Legal-AI Backend",
+        "version": "1.0.0"
+    }
+
+
 # Enable CORS for React frontend
 app.add_middleware(
     CORSMiddleware,

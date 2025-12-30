@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = "YOUR_OPENAI_API_KEY_HERE"
     
     # RAG Settings
-    PDF_PATH: str = "document/COI_2024.pdf"
+    PDF_PATH: str = "document/"
     EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
     
     # Server Settings

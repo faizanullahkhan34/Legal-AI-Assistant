@@ -1,3 +1,4 @@
+import os
 from app.utils.redis_cache import set_cache_embedding, get_all_cache_embeddings
 from app.utils.embeddings import search_similar_texts, model
 import ollama
@@ -11,13 +12,39 @@ logger = get_logger(__name__)
 
 # Initialize RAG on module load (or move to startup event)
 try:
-    if load_embeddings_from_disk():
+    should_reindex = False
+    index_path = "document/faiss_index.bin"
+    
+    # Check if we need to re-index based on timestamps
+    pdf_resource_mtime = 0
+    if os.path.exists(settings.PDF_PATH):
+        if os.path.isfile(settings.PDF_PATH):
+            pdf_resource_mtime = os.path.getmtime(settings.PDF_PATH)
+        elif os.path.isdir(settings.PDF_PATH):
+            for root, _, files in os.walk(settings.PDF_PATH):
+                for f in files:
+                    if f.lower().endswith('.pdf'):
+                        mtime = os.path.getmtime(os.path.join(root, f))
+                        if mtime > pdf_resource_mtime:
+                            pdf_resource_mtime = mtime
+
+    if os.path.exists(index_path):
+        if pdf_resource_mtime > os.path.getmtime(index_path):
+            should_reindex = True
+            logger.info("Detected changes in PDFs. Re-indexing...")
+    else:
+        should_reindex = True
+
+    if not should_reindex and load_embeddings_from_disk():
         logger.info("Loaded existing embeddings from disk.")
     else:
-        logger.info(f"Loading PDF from {settings.PDF_PATH}...")
+        logger.info(f"Loading PDFs from {settings.PDF_PATH}...")
         pdf_texts = load_pdf_text(settings.PDF_PATH)
-        get_embeddings(pdf_texts)
-        logger.info("PDF loaded and newly embedded.")
+        if not pdf_texts:
+             logger.warning(f"No PDFs found in {settings.PDF_PATH} or failed to load.")
+        else:
+             get_embeddings(pdf_texts)
+             logger.info("PDFs loaded and newly embedded.")
 except Exception as e:
     logger.error(f"Failed to initialize embeddings: {e}")
 
