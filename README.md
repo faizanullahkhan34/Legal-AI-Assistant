@@ -28,7 +28,37 @@ A powerful AI-powered legal assistant designed to provide accurate legal guidanc
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 🐳 Docker Deployment (Recommended)
+
+The easiest way to run the entire application with all services (Frontend, Backend, Redis, and Ollama):
+
+**Quick Start:**
+```powershell
+# Complete deployment with interactive setup
+.\deploy.bat
+
+# Or simple one-click start
+.\start_app.bat
+```
+
+**What you get:**
+- ✅ Frontend (React + Nginx) on http://localhost:5173
+- ✅ Backend (FastAPI) on http://localhost:8000
+- ✅ Redis caching
+- ✅ Ollama AI server with models
+- ✅ All services networked and health-monitored
+
+**Detailed Documentation:**
+- [Docker Deployment Guide](README_DOCKER.md) - Complete setup instructions
+- [Docker Quick Reference](DOCKER_REFERENCE.md) - Commands and troubleshooting
+
+---
+
+### 💻 Manual Setup (Development)
+
+If you prefer to run services individually:
+
+#### Prerequisites
 *   **Node.js** & **npm**
 *   **Python 3.10+**
 *   **Ollama** installed and running with `llama3` model (`ollama pull llama3`).
